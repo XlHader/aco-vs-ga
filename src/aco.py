@@ -3,6 +3,7 @@ import tsplib95
 import acopy
 import time
 import concurrent.futures
+import numpy as np
 
 
 class ACOExperiment:
@@ -27,11 +28,24 @@ class ACOExperiment:
         self.evaporation_rate = evaporation_rate
         self.deposit_factor = deposit_factor
         self.num_threads = num_threads
+        self.distance_matrix = None
 
     def run(self):
         # Cargar la instancia y obtener el grafo
         problem = tsplib95.load(self.instance_file)
         graph = problem.get_graph()
+
+        nodes = sorted(list(graph.nodes()))
+        n = len(nodes)
+
+        self.distance_matrix = np.zeros((n, n))
+        for i in range(n):
+            for j in range(n):
+                try:
+                    self.distance_matrix[i][j] = graph[nodes[i]
+                                                       ][nodes[j]]['weight']
+                except KeyError:
+                    self.distance_matrix[i][j] = np.inf
 
         # Inicializar feromonas en cada arista
         for u, v, data in graph.edges(data=True):
