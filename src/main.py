@@ -35,10 +35,28 @@ def parse_arguments():
                         help="Tamaño de la población en GA")
     parser.add_argument("--ga_parents", type=int,
                         default=150, help="Número de padres en GA")
-    parser.add_argument("--ga_mutation", type=float,
-                        default=0.05, help="Probabilidad de mutación en GA")
+    parser.add_argument("--ga_mutation", type=str, default="0.05",
+                        help="Probabilidad de mutación en GA (Ejemplo: '0.1' o '0.4,0.1' para adaptativo)")
     parser.add_argument("--ga_keep_elite", type=int, default=5,
                         help="Número de mejores individuos retenidos")
+    parser.add_argument("--ga_selection", type=str, default="tournament",
+                        help="Método de selección de padres en GA ('tournament', 'roulette', etc.)")
+    parser.add_argument("--ga_crossover", type=str, default="order",
+                        help="Tipo de crossover en GA ('scattered', 'two_points', 'order')")
+    parser.add_argument("--ga_crossover_prob", type=float, default=0.9,
+                        help="Probabilidad de crossover en GA")
+    parser.add_argument("--ga_mutation_type", type=str, default="swap",
+                        help="Tipo de mutación en GA ('swap', 'scramble', 'adaptive')")
+    parser.add_argument("--ga_mutation_percent", type=int, default=15,
+                        help="Porcentaje de genes mutados en GA")
+    parser.add_argument("--ga_keep_parents", type=int, default=0,
+                        help="Número de padres mantenidos en la siguiente generación")
+    parser.add_argument("--ga_stop_criteria", type=str, default="saturate_150",
+                        help="Criterio de parada en GA (Ejemplo: 'saturate_150,reach_0.00001')")
+    parser.add_argument("--ga_seed", type=int, default=42,
+                        help="Semilla aleatoria para reproducibilidad")
+    parser.add_argument("--ga_k_tournament", type=int, default=3,
+                        help="Número de individuos en el torneo para selección")
 
     return parser.parse_args()
 
@@ -80,21 +98,36 @@ def run_experiments(tsp_file, tour_file, args):
 
     opt_tour = load_optimal_tour(tour_file)
 
-    # 🔹 Ejecutar ACO
+    if "," in args.ga_mutation:
+        args.ga_mutation = [float(m) for m in args.ga_mutation.split(",")]
+    else:
+        args.ga_mutation = float(args.ga_mutation)
+
+    # Ejecutar ACO
     aco_exp = ACOExperiment(instance_file=tsp_file,
                             num_ants=args.aco_ants,
                             num_iterations=args.aco_iterations,
                             num_threads=args.threads)
     aco_best_solution, aco_best_length, aco_conv, aco_time = aco_exp.run()
 
-    # 🔹 Ejecutar GA
-    ga_exp = GAExperiment(instance_file=tsp_file,
-                          num_generations=args.ga_generations,
-                          sol_per_pop=args.ga_pop_size,
-                          num_parents_mating=args.ga_parents,
-                          mutation_probability=args.ga_mutation,
-                          num_threads=args.threads,
-                          keep_elitism=args.ga_keep_elite)
+    # Ejecutar GA
+    ga_exp = GAExperiment(
+        instance_file=args.tsp,
+        num_generations=args.ga_generations,
+        sol_per_pop=args.ga_pop_size,
+        num_parents_mating=args.ga_parents,
+        mutation_probability=args.ga_mutation,
+        num_threads=args.threads,
+        keep_elitism=args.ga_keep_elite,
+        parent_selection_type=args.ga_selection,
+        crossover_type=args.ga_crossover,
+        crossover_probability=args.ga_crossover_prob,
+        mutation_type=args.ga_mutation_type,
+        mutation_percent_genes=args.ga_mutation_percent,
+        keep_parents=args.ga_keep_parents,
+        stop_criteria=args.ga_stop_criteria.split(","),
+        random_seed=args.ga_seed
+    )
     ga_best_tour, ga_best_length, ga_conv, ga_time = ga_exp.run()
 
     # Comparación con la solución óptima
@@ -102,7 +135,7 @@ def run_experiments(tsp_file, tour_file, args):
         aco_exp.distance_matrix[opt_tour[i], opt_tour[i + 1]] for i in range(len(opt_tour) - 1))
     opt_distance += aco_exp.distance_matrix[opt_tour[-1], opt_tour[0]]
 
-    # 🔹 Cálculo del error porcentual
+    # Cálculo del error porcentual
     aco_error = ((aco_best_length - opt_distance) / opt_distance) * 100
     ga_error = ((ga_best_length - opt_distance) / opt_distance) * 100
 
@@ -150,7 +183,7 @@ def main():
     # Ejecutar experimentos y obtener resultados
     result = run_experiments(args.tsp, args.tour, args)
 
-    # 🔹 Graficar convergencia
+    # Graficar convergencia
     plot_convergence(
         result["Instancia"], result["ACO Convergencia"], result["GA Convergencia"])
 
