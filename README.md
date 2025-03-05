@@ -25,7 +25,16 @@ Se ha optimizado el rendimiento con paralelización configurable.
 
 ### Ejecución Manual
 ```sh
-python -m src.main --threads [NUM_THREADS]
+python3 -m src.main --tsp TSPLIB/berlin52.tsp --tour TSPLIB/berlin52.opt.tour \
+    --threads 32 \
+    --aco_ants 10 --aco_iterations 350 \
+    --ga_generations 1000 --ga_pop_size 2000 --ga_parents 400 \
+    --ga_mutation 0.4 --ga_keep_elite 15 \
+    --ga_selection "tournament" --ga_k_tournament 6 --ga_crossover "order" \
+    --ga_crossover_prob 0.85 --ga_mutation_type "adaptive" \
+    --ga_mutation_percent 12 --ga_keep_parents 0 \
+    --ga_stop_criteria "saturate_150" \
+    --ga_seed 42
 ```
 
 Parámetros clave:
