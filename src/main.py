@@ -27,6 +27,16 @@ def parse_arguments():
                         help="Número de hormigas en ACO")
     parser.add_argument("--aco_iterations", type=int,
                         default=250, help="Número de iteraciones en ACO")
+    parser.add_argument("--aco_max_stagnation", type=int, default=50,
+                        help="Número máximo de iteraciones sin mejora en ACO")
+    parser.add_argument("--aco_beta", type=float, default=3.0,
+                        help="Beta en ACO")
+    parser.add_argument("--aco_alpha", type=float, default=1.0,
+                        help="Alpha en ACO")
+    parser.add_argument("--aco_evaporation_rate", type=float,
+                        default=0.1, help="Tasa de evaporación en ACO")
+    parser.add_argument("--aco_deposit_factor", type=float,
+                        default=2.0, help="Factor de depósito en ACO")
 
     # Configuración de GA
     parser.add_argument("--ga_generations", type=int,
@@ -57,6 +67,10 @@ def parse_arguments():
                         help="Semilla aleatoria para reproducibilidad")
     parser.add_argument("--ga_k_tournament", type=int, default=3,
                         help="Número de individuos en el torneo para selección")
+    parser.add_argument("--ga_two_opt_prob", type=float, default=0.25,
+                        help="Probabilidad de aplicar 2-opt en GA")
+    parser.add_argument("--ga_two_opt_max_iter", type=int, default=1,
+                        help="Número máximo de iteraciones de 2-opt en GA")
 
     return parser.parse_args()
 
@@ -99,7 +113,8 @@ def run_experiments(tsp_file, tour_file, args):
     opt_tour = load_optimal_tour(tour_file)
 
     if "," in args.ga_mutation:
-        args.ga_mutation = [float(m) for m in args.ga_mutation.split(",")]
+        args.ga_mutation = tuple([float(m)
+                                 for m in args.ga_mutation.split(",")])
     else:
         args.ga_mutation = float(args.ga_mutation)
 
@@ -107,6 +122,11 @@ def run_experiments(tsp_file, tour_file, args):
     aco_exp = ACOExperiment(instance_file=tsp_file,
                             num_ants=args.aco_ants,
                             num_iterations=args.aco_iterations,
+                            max_stagnation=args.aco_max_stagnation,
+                            alpha=args.aco_alpha,
+                            beta=args.aco_beta,
+                            evaporation_rate=args.aco_evaporation_rate,
+                            deposit_factor=args.aco_deposit_factor,
                             num_threads=args.threads)
     aco_best_solution, aco_best_length, aco_conv, aco_time = aco_exp.run()
 
@@ -126,7 +146,10 @@ def run_experiments(tsp_file, tour_file, args):
         mutation_percent_genes=args.ga_mutation_percent,
         keep_parents=args.ga_keep_parents,
         stop_criteria=args.ga_stop_criteria.split(","),
-        random_seed=args.ga_seed
+        random_seed=args.ga_seed,
+        k_tournament=args.ga_k_tournament,
+        two_opt_prob=args.ga_two_opt_prob,
+        two_opt_max_iter=args.ga_two_opt_max_iter
     )
     ga_best_tour, ga_best_length, ga_conv, ga_time = ga_exp.run()
 
