@@ -4,6 +4,58 @@ import numpy as np
 import pygad
 import time
 
+import numpy as np
+import random
+
+
+def ordered_crossover(parents, offspring_size, ga_instance):
+    """
+    Implementa el Order Crossover (OX1) para permutaciones en TSP.
+    Parámetros:
+      - parents: numpy array con los padres.
+      - offspring_size: tupla indicando la cantidad de descendientes a generar.
+      - ga_instance: instancia de GA, de donde se extrae el número de genes.
+    Retorna:
+      - offspring: numpy array con los descendientes generados.
+    """
+    offspring = []
+    num_parents = parents.shape[0]
+    gene_length = ga_instance.num_genes
+
+    for k in range(offspring_size[0]):
+        parent1_idx = k % num_parents
+        parent2_idx = (k + 1) % num_parents
+        parent1 = parents[parent1_idx]
+        parent2 = parents[parent2_idx]
+
+        # 🔹 Seleccionar dos puntos de cruce aleatorios
+        cp1, cp2 = sorted(random.sample(range(gene_length), 2))
+
+        # 🔹 Inicializar el hijo con None
+        child = [None] * gene_length
+
+        # 🔹 Copiar el segmento intermedio de parent1
+        child[cp1:cp2] = parent1[cp1:cp2].tolist()
+
+        # 🔹 Rellenar los espacios vacíos con los genes de parent2 en el orden en que aparecen,
+        # omitiendo los que ya se copiaron.
+        current_index = cp2
+        for gene in parent2:
+            if gene not in child:
+                if current_index >= gene_length:
+                    current_index = 0
+                # Buscar la siguiente posición vacía
+                while child[current_index] is not None:
+                    current_index += 1
+                    if current_index >= gene_length:
+                        current_index = 0
+                child[current_index] = gene
+                current_index += 1
+
+        offspring.append(child)
+
+    return np.array(offspring)
+
 
 class GAExperiment:
     def __init__(self, instance_file, num_generations=200, sol_per_pop=50,
@@ -64,11 +116,11 @@ class GAExperiment:
                                    self.sol_per_pop, n),
                                gene_type=int,
                                parent_selection_type="tournament",
-                               crossover_type="two_points",
+                               crossover_type=ordered_crossover,
                                crossover_probability=0.9,
                                mutation_type="swap",
                                mutation_probability=self.mutation_probability,
-                               mutation_percent_genes=10,
+                               mutation_percent_genes=15,
                                keep_parents=0,
                                keep_elitism=self.keep_elitism,
                                stop_criteria=["saturate_150"],
