@@ -1,0 +1,7 @@
+tsplib95
+acopy
+pygad
+networkx
+matplotlib
+pandas
+numpy
