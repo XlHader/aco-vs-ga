@@ -14,34 +14,37 @@ def local_search_2opt(route, distance_matrix, max_iter=1):
     n = len(route)
 
     def route_distance(r):
-        dist = 0
-        for i in range(n - 1):
-            dist += distance_matrix[r[i], r[i+1]]
-        dist += distance_matrix[r[-1], r[0]]
-        return dist
+        """
+        Calcula la distancia total de la ruta usando la matriz de distancias.
+        """
+        return np.sum(distance_matrix[r[:-1], r[1:]]) + distance_matrix[r[-1], r[0]]
 
     best_route = route.copy()
     best_dist = route_distance(best_route)
-    improved = True
-    iter_count = 0
 
-    while improved and iter_count < max_iter:
+    for _ in range(max_iter):
         improved = False
-        iter_count += 1
-        for i in range(1, n-1):
-            for j in range(i+1, n):
-                # Evitar intercambiar lados adyacentes que no cambian nada
+        # Buscar dos índices aleatorios para hacer el intercambio 2-Opt
+        for i in range(1, n - 2):  # Empieza en 1, no tiene sentido revisar el primer o el último
+            for j in range(i + 1, n - 1):  # j debe ser mayor que i+1
+                # Evitar intercambiar elementos consecutivos, ya que no cambiaría nada
                 if j - i == 1:
                     continue
-                new_route = best_route.copy()
-                # Invertir la subsección i:j
-                new_route[i:j] = new_route[i:j][::-1]
+
+                # Realizamos el intercambio 2-Opt, que invierte el segmento entre i y j
+                new_route = np.concatenate(
+                    (best_route[:i], best_route[i:j+1][::-1], best_route[j+1:]))
                 new_dist = route_distance(new_route)
+
+                # Si encontramos una mejor solución, actualizamos
                 if new_dist < best_dist:
                     best_dist = new_dist
                     best_route = new_route
                     improved = True
-        # Continúa hasta que no mejore o lleguemos a max_iter
+
+        # Si no mejoramos en esta iteración, terminamos
+        if not improved:
+            break
 
     return best_route
 
