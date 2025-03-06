@@ -24,17 +24,62 @@ Se ha optimizado el rendimiento con paralelización configurable.
 ## Uso
 
 ### Ejecución Manual
+
+## Berlín 52
+
 ```sh
-python3 -m src.main --tsp TSPLIB/berlin52.tsp --tour TSPLIB/berlin52.opt.tour \
-    --threads 32 \
-    --aco_ants 10 --aco_iterations 350 \
-    --ga_generations 1000 --ga_pop_size 2000 --ga_parents 400 \
-    --ga_mutation 0.4 --ga_keep_elite 15 \
-    --ga_selection "tournament" --ga_k_tournament 6 --ga_crossover "order" \
-    --ga_crossover_prob 0.85 --ga_mutation_type "adaptive" \
-    --ga_mutation_percent 12 --ga_keep_parents 0 \
-    --ga_stop_criteria "saturate_150" \
-    --ga_seed 42
+python3 -m src.main \
+  --tsp TSPLIB/berlin52.tsp --tour TSPLIB/berlin52.opt.tour \
+  --aco_ants 20 --aco_iterations 300 --aco_max_stagnation 50 \
+  --threads 16 \
+  --ga_generations 500 \
+  --ga_pop_size 200 \
+  --ga_parents 50 \
+  --ga_mutation 0.1 \
+  --ga_keep_elite 5 \
+  --ga_selection tournament \
+  --ga_crossover order \
+  --ga_crossover_prob 0.9 \
+  --ga_mutation_type adaptive2opt \
+  --ga_mutation_percent 15 \
+  --ga_keep_parents 0 \
+  --ga_stop_criteria saturate_20 \
+  --ga_seed 42 \
+  --ga_k_tournament 3
+```
+
+## ch130 
+
+```sh
+python3 -m src.main \
+    --tsp TSPLIB/ch130.tsp \
+    --tour TSPLIB/ch130.opt.tour \
+    --threads 16 \
+    \
+    --aco_ants 25 \
+    --aco_iterations 500 \
+    --aco_max_stagnation 100 \
+    --aco_alpha 1.0 \
+    --aco_beta 5.0 \
+    --aco_evaporation_rate 0.2 \
+    --aco_deposit_factor 3.0 \
+    \
+    --ga_generations 1200 \
+    --ga_pop_size 250 \
+    --ga_parents 80 \
+    --ga_mutation 0.1 \
+    --ga_keep_elite 5 \
+    --ga_selection tournament \
+    --ga_crossover order \
+    --ga_crossover_prob 0.9 \
+    --ga_mutation_type adaptive2opt \
+    --ga_mutation_percent 15 \
+    --ga_keep_parents 0 \
+    --ga_stop_criteria saturate_30 \
+    --ga_seed 42 \
+    --ga_k_tournament 3 \
+    --ga_two_opt_prob 0.2 \
+    --ga_two_opt_max_iter 1
 ```
 
 Parámetros clave:
